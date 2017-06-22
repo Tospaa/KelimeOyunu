@@ -2,10 +2,48 @@ import tkinter as tk
 import tkinter.filedialog as fdialog
 import tkinter.messagebox as msgbox
 from random import randint, choice
-from os.path import isfile, dirname, realpath
+from os.path import isfile, dirname, realpath, basename
+
+
+class oyuuncuIsmi(tk.Tk):
+    def __init__(self):
+        tk.Tk.__init__(self)
+        self.resizable(False, False)
+        self.title("İsminizi Giriniz...")
+        self.bind("<Return>", self.isim_onayla)
+        self.statik_etiket = tk.Label(self, text="Lütfen isminizi giriniz", font=("Helvetica", 30))
+        self.girilen_isim = tk.StringVar()
+        self.isim_giris = tk.Entry(self, font=("Helvetica", 30), textvariable=self.girilen_isim, width=25)
+        self.onayla_buton = tk.Button(self, text="Onayla", command=self.isim_onayla, font=("Helvetica", 30))
+        self.statik_etiket.pack()
+        self.isim_giris.pack()
+        self.onayla_buton.pack()
+        self.isim = ""
+        self.azami_karakter_siniri = 20
+        self.girilen_isim.trace("w", self.karakter_sayisi_takip)
+        self.izin_verilen_karakterler = ["A","B","C","Ç","D","E","F","G","Ğ","H","I","İ","J","K","L","M","N","O","Ö","P","R","S","Ş","T","U","Ü","V","Y","Z",
+        "a","b","c","ç","d","e","f","g","ğ","h","ı","i","j","k","l","m","n","o","ö","p","r","s","ş","t","u","ü","v","y","z"," "]
+        self.isim_giris.focus()
+        
+    def karakter_sayisi_takip(self, *args):
+        try:
+            if len(self.girilen_isim.get()) > self.azami_karakter_siniri:
+                self.girilen_isim.set(self.girilen_isim.get()[:-1])
+            
+            if not (self.girilen_isim.get()[-1] in self.izin_verilen_karakterler):
+                self.girilen_isim.set(self.girilen_isim.get()[:-1])
+        except IndexError:
+            return None
+
+    def isim_onayla(self, *args):
+        self.isim = self.girilen_isim.get()
+        if len(self.isim) <= 3:
+            msgbox.showerror("Hata","İsimdeki karakter sayısı en az 4 olmalı.")
+        else:
+            self.destroy()
 
 class kelimeOyunu(tk.Tk):
-    def __init__(self):
+    def __init__(self, isim):
         tk.Tk.__init__(self)
         self.resizable(False, False)
         self.title("Kelime Oyunu")
@@ -35,6 +73,7 @@ class kelimeOyunu(tk.Tk):
         self.dusunsure_etiket.grid(row=5,column=2)
         self.puan_etiket.grid(row=6,column=0,columnspan=3)
         self.alfabe = ["A","B","C","Ç","D","E","F","G","Ğ","H","I","İ","J","K","L","M","N","O","Ö","P","R","S","Ş","T","U","Ü","V","Y","Z"]
+        self.oyuncu_ismi = isim
         self.durduruldu = True
         self.ara = True
         self.toplam_verilen_saniye = 240
@@ -45,6 +84,7 @@ class kelimeOyunu(tk.Tk):
         self.dogru_cevap = " "
         self.alinan_harfler = []
         self.geri_sayim(self.toplam_verilen_saniye)
+        self.focus_force()
         if not isfile("veri"):
             with open("veri","w") as f:
                 pass
@@ -163,9 +203,11 @@ class kelimeOyunu(tk.Tk):
                 elif self.kalan_sure <= 0:
                     self.benjamin_buton.configure(text="Süre Bitti", state="disabled")
                     self.harfaliyim_buton.configure(state="disabled")
+                    self.oyun_sonu()
                 elif self.soru_sayisi == 14:
                     self.benjamin_buton.configure(text="Soru Bitti", state="disabled")
                     self.harfaliyim_buton.configure(state="disabled")
+                    self.oyun_sonu()
         elif self.harfaliyim_buton['state'] == 'disabled':
             return None
 
@@ -197,6 +239,8 @@ class kelimeOyunu(tk.Tk):
         self.puan_etiket.configure(text="Puan: {0}".format(self.puan))
         self.dusunsure_etiket.configure(text=" ")
         self.dusunsure_etiket_statik.configure(text=" ")
+        if self.benjamin_buton['state'] == 'disabled':
+            self.oyun_sonu()
 
     def bilemedi(self):
         self.bildi(False)
@@ -242,6 +286,20 @@ class kelimeOyunu(tk.Tk):
         self.benjamin_buton.configure(state="normal", text="Başla")
         self.geri_sayim(self.toplam_verilen_saniye)
 
+    def oyun_sonu(self):
+        if not isfile("puanlar.txt"):
+            with open("puanlar.txt","w") as f:
+                f.write("İsim, Puan, Kalan Süre, Soru Paketi\n")
+        
+        with open("puanlar.txt","a") as f:
+            f.write('"{isim}", {puan}, {sure}, {dosya}\n'.format(isim=self.oyuncu_ismi, puan=self.puan, sure=self.kalan_sure, dosya=basename(self.son_dosya)))
+
+
 if __name__ == "__main__":
-    app = kelimeOyunu()
-    app.mainloop()
+    isim_al = oyuuncuIsmi()
+    isim_al.mainloop()
+    while len(isim_al.isim) <= 3:
+        msgbox.showerror("Hata","İsimdeki karakter sayısı en az 4 olmalı.")
+        raise SystemExit
+    pencere = kelimeOyunu(isim_al.isim)
+    pencere.mainloop()
