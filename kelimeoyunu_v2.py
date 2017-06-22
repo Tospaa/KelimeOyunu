@@ -110,7 +110,7 @@ class kelimeOyunu(tk.Tk):
         self.puan_etiket['text'] += " ({0})".format(list(self.kelime_etiket['text']).count("•") * 100)
 
     def benjamin_fonksiyon(self, *args):
-        if self.benjamin_buton['state'] == 'normal' and self.kalan_sure > 0 and self.soru_sayisi != 14:
+        if self.benjamin_buton['state'] == 'normal':
             if self.durduruldu:
                 self.durduruldu = False
                 self.geri_sayim()
