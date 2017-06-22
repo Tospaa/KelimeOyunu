@@ -110,7 +110,7 @@ class kelimeOyunu(tk.Tk):
         self.puan_etiket['text'] += " ({0})".format(list(self.kelime_etiket['text']).count("•") * 100)
 
     def benjamin_fonksiyon(self, *args):
-        if self.benjamin_buton['state'] == 'normal':
+        if self.benjamin_buton['state'] == 'normal' and self.kalan_sure > 0 and self.soru_sayisi != 14:
             if self.durduruldu:
                 self.durduruldu = False
                 self.geri_sayim()
@@ -157,8 +157,15 @@ class kelimeOyunu(tk.Tk):
             self.kalan_sure -= 0.75
             if hafiza == self.dogru_cevap:
                 self.durduruldu = True
-                self.benjamin_buton.configure(text="Yeni Soru", state="normal")
-                self.harfaliyim_buton.configure(state="disabled")
+                if self.kalan_sure > 0 and self.soru_sayisi != 14:
+                    self.benjamin_buton.configure(text="Yeni Soru", state="normal")
+                    self.harfaliyim_buton.configure(state="disabled")
+                elif self.kalan_sure <= 0:
+                    self.benjamin_buton.configure(text="Süre Bitti", state="disabled")
+                    self.harfaliyim_buton.configure(state="disabled")
+                elif self.soru_sayisi == 14:
+                    self.benjamin_buton.configure(text="Soru Bitti", state="disabled")
+                    self.harfaliyim_buton.configure(state="disabled")
         elif self.harfaliyim_buton['state'] == 'disabled':
             return None
 
