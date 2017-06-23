@@ -36,10 +36,10 @@ class oyuuncuIsmi(tk.Tk):
             return None
 
     def isim_onayla(self, *args):
-        self.isim = self.girilen_isim.get()
-        if len(self.isim) <= 3:
+        if len(self.girilen_isim.get()) <= 3:
             msgbox.showerror("Hata","İsimdeki karakter sayısı en az 4 olmalı.")
         else:
+            self.isim = self.girilen_isim.get()
             self.destroy()
 
 class kelimeOyunu(tk.Tk):
@@ -289,14 +289,77 @@ class kelimeOyunu(tk.Tk):
     def oyun_sonu(self):
         if not isfile("puanlar.txt"):
             with open("puanlar.txt","w") as f:
-                f.write("İsim, Puan, Kalan Süre, Soru Paketi\n")
+                f.write("İsim,Puan,Kalan Süre,Soru Paketi\n")
         
         with open("puanlar.txt","a") as f:
-            f.write('"{isim}", {puan}, {sure}, {dosya}\n'.format(isim=self.oyuncu_ismi, puan=self.puan, sure=self.kalan_sure, dosya=basename(self.son_dosya)))
+            f.write("{isim},{puan},{sure},{dosya}\n".format(isim=self.oyuncu_ismi, puan=self.puan, sure=int(self.kalan_sure), dosya=basename(self.son_dosya)))
+        
+        puan_goster = puanTablosu()
+        puan_goster.focus_force()
+        puan_goster.mainloop()
+
+class puanTablosu(tk.Tk):
+    def __init__(self):
+        tk.Tk.__init__(self)
+        self.resizable(True, True)
+        self.title("Puan Tablosu")
+        self.bind("<Return>", lambda x: self.destroy())
+        self.statik_etiket = tk.Label(self, text="Puan Tablosu", font=("Helvetica",30))
+        self.etiket_liste = []
+        self.aciklama_etiket1 = tk.Label(self, text="İsim", font=("Helvetica",15))
+        self.aciklama_etiket2 = tk.Label(self, text="Puan", font=("Helvetica",15))
+        self.aciklama_etiket3 = tk.Label(self, text="Kalan Süre", font=("Helvetica",15))
+        for i in range(30):
+            self.etiket_liste.append(tk.Label(self, text="", font=("Helvetica",15)))
+        self.kapat_buton = tk.Button(self, text="Kapat", command=self.destroy)
+        self.statik_etiket.grid(row=0, column=0, columnspan=3)
+        self.aciklama_etiket1.grid(row=1, column=0, sticky="w")
+        self.aciklama_etiket2.grid(row=1, column=1, sticky="w")
+        self.aciklama_etiket3.grid(row=1, column=2, sticky="w")
+        for i in range(10):
+            self.etiket_liste[i].grid(row=i+2,column=0, sticky="w")
+        for i in range(10,20):
+            self.etiket_liste[i].grid(row=i-8,column=1, sticky="w")
+        for i in range(20,30):
+            self.etiket_liste[i].grid(row=i-18,column=2, sticky="w")
+        self.kapat_buton.grid(row=12,column=0, columnspan=3)
+        self.puanlar_liste = []
+        self.puan_yukle()
+    
+    def puan_yukle(self):
+        if isfile("puanlar.txt"):
+            with open("puanlar.txt") as f:
+                self.puanlar_liste = f.readlines()
+            del self.puanlar_liste[0]
+            for i in range(len(self.puanlar_liste)):
+                self.puanlar_liste[i] = self.puanlar_liste[i].split(",")
+            self.puanlar_liste = sorted(self.puanlar_liste, key=lambda neslis: int(neslis[1]), reverse = True)
+            for i in range(10):
+                try:
+                    self.etiket_liste[i]['text'] = "{0}. {1}".format(i+1, self.puanlar_liste[i][0])
+                except IndexError as e:
+                    print(e)
+                    break
+            for i in range(10,20):
+                try:
+                    self.etiket_liste[i]['text'] = "{0}".format(self.puanlar_liste[i-10][1])
+                except IndexError as e:
+                    print(e)
+                    break
+            for i in range(20,30):
+                try:
+                    self.etiket_liste[i]['text'] = "{0} saniye".format(self.puanlar_liste[i-20][2])
+                except IndexError as e:
+                    print(e)
+                    break
+        else:
+            msgbox.showerror("Hata","Henüz bir puan alan olmamış.")
+            self.destroy()
 
 
 if __name__ == "__main__":
     isim_al = oyuuncuIsmi()
+    isim_al.focus_force()
     isim_al.mainloop()
     while len(isim_al.isim) <= 3:
         msgbox.showerror("Hata","İsimdeki karakter sayısı en az 4 olmalı.")
