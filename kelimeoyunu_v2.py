@@ -333,7 +333,7 @@ class puanTablosu(tk.Tk):
             del self.puanlar_liste[0]
             for i in range(len(self.puanlar_liste)):
                 self.puanlar_liste[i] = self.puanlar_liste[i].split(",")
-            self.puanlar_liste = sorted(self.puanlar_liste, key=lambda neslis: int(neslis[1]), reverse = True)
+            self.puanlar_liste = sorted(sorted(self.puanlar_liste, key=lambda neslis: int(neslis[2]), reverse = True), key=lambda neslis: int(neslis[1]), reverse = True)
             for i in range(10):
                 try:
                     self.etiket_liste[i]['text'] = "{0}. {1}".format(i+1, self.puanlar_liste[i][0])
@@ -366,3 +366,4 @@ if __name__ == "__main__":
         raise SystemExit
     pencere = kelimeOyunu(isim_al.isim)
     pencere.mainloop()
+    
