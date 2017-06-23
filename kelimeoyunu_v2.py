@@ -5,7 +5,7 @@ from random import randint, choice
 from os.path import isfile, dirname, realpath, basename
 
 
-class oyuuncuIsmi(tk.Tk):
+class oyuncuIsmi(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
         self.resizable(False, False)
@@ -38,9 +38,18 @@ class oyuuncuIsmi(tk.Tk):
     def isim_onayla(self, *args):
         if len(self.girilen_isim.get()) <= 3:
             msgbox.showerror("Hata","İsimdeki karakter sayısı en az 4 olmalı.")
-        else:
-            self.isim = self.girilen_isim.get()
-            self.destroy()
+            return None
+        for i in self.girilen_isim.get():
+            if not (i in self.izin_verilen_karakterler):
+                msgbox.showerror("Hata","İsim içinde izin verilmeyen karakter tespit edildi.")
+                self.girilen_isim.set("")
+                return None
+        if len(self.girilen_isim.get()) > self.azami_karakter_siniri:
+            msgbox.showerror("Hata","İsim çok uzun.")
+            self.girilen_isim.set("")
+            return None
+        self.isim = self.girilen_isim.get()
+        self.destroy()
 
 class kelimeOyunu(tk.Tk):
     def __init__(self, isim):
@@ -301,7 +310,7 @@ class kelimeOyunu(tk.Tk):
 class puanTablosu(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
-        self.resizable(True, True)
+        self.resizable(False, False)
         self.title("Puan Tablosu")
         self.bind("<Return>", lambda x: self.destroy())
         self.statik_etiket = tk.Label(self, text="Puan Tablosu", font=("Helvetica",30))
@@ -358,7 +367,7 @@ class puanTablosu(tk.Tk):
 
 
 if __name__ == "__main__":
-    isim_al = oyuuncuIsmi()
+    isim_al = oyuncuIsmi()
     isim_al.focus_force()
     isim_al.mainloop()
     while len(isim_al.isim) <= 3:
@@ -366,4 +375,3 @@ if __name__ == "__main__":
         raise SystemExit
     pencere = kelimeOyunu(isim_al.isim)
     pencere.mainloop()
-    
