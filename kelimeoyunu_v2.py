@@ -24,16 +24,15 @@ class oyuncuIsmi(tk.Tk):
         self.izin_verilen_karakterler = ["A","B","C","Ç","D","E","F","G","Ğ","H","I","İ","J","K","L","M","N","O","Ö","P","R","S","Ş","T","U","Ü","V","Y","Z",
         "a","b","c","ç","d","e","f","g","ğ","h","ı","i","j","k","l","m","n","o","ö","p","r","s","ş","t","u","ü","v","y","z"," "]
         self.isim_giris.focus()
+        self.protocol("WM_DELETE_WINDOW", self.kapat)
         
     def karakter_sayisi_takip(self, *args):
-        try:
+        if len(self.girilen_isim.get()) != 0:
             if len(self.girilen_isim.get()) > self.azami_karakter_siniri:
                 self.girilen_isim.set(self.girilen_isim.get()[:-1])
             
             if not (self.girilen_isim.get()[-1] in self.izin_verilen_karakterler):
                 self.girilen_isim.set(self.girilen_isim.get()[:-1])
-        except IndexError:
-            return None
 
     def isim_onayla(self, *args):
         if len(self.girilen_isim.get()) <= 3:
@@ -41,7 +40,7 @@ class oyuncuIsmi(tk.Tk):
             return None
         for i in self.girilen_isim.get():
             if not (i in self.izin_verilen_karakterler):
-                msgbox.showerror("Hata","İsim içinde izin verilmeyen karakter tespit edildi.")
+                msgbox.showerror("Hata","İsim içinde izin verilmeyen karakter tespit edildi.\nTürkçe karakterler dışındaki tüm karakterler ve noktalama işaretleri girilemez.")
                 self.girilen_isim.set("")
                 return None
         if len(self.girilen_isim.get()) > self.azami_karakter_siniri:
@@ -50,6 +49,9 @@ class oyuncuIsmi(tk.Tk):
             return None
         self.isim = self.girilen_isim.get()
         self.destroy()
+    
+    def kapat(self):
+        raise SystemExit
 
 class kelimeOyunu(tk.Tk):
     def __init__(self, isim):
@@ -122,9 +124,9 @@ class kelimeOyunu(tk.Tk):
             self.sure_durdu("Süre Bitti")
         else:
             self.sure_etiket.configure(text="{dk}:{sn:02d}".format(dk=(int(self.kalan_sure//60)), sn=(int(self.kalan_sure%60))))
-            self.kalan_sure -= 0.25
+            self.kalan_sure -= 0.1
             if not self.durduruldu:
-                self.after(250, self.geri_sayim)
+                self.after(100, self.geri_sayim)
 
     def ileri_sayim(self, bastan_basla = False):
         if self.ara:
@@ -143,9 +145,9 @@ class kelimeOyunu(tk.Tk):
             return None
         
         self.dusunsure_etiket.configure(text="{0}".format(int(self.gecen_sure)))
-        self.gecen_sure += 0.25
+        self.gecen_sure += 0.1
         if self.durduruldu:
-            self.after(250, self.ileri_sayim)
+            self.after(100, self.ileri_sayim)
 
     def sure_durdu(self, neden = "Yeni Soru"):
         self.durduruldu = True
@@ -346,20 +348,17 @@ class puanTablosu(tk.Tk):
             for i in range(10):
                 try:
                     self.etiket_liste[i]['text'] = "{0}. {1}".format(i+1, self.puanlar_liste[i][0])
-                except IndexError as e:
-                    print(e)
+                except IndexError:
                     break
             for i in range(10,20):
                 try:
                     self.etiket_liste[i]['text'] = "{0}".format(self.puanlar_liste[i-10][1])
-                except IndexError as e:
-                    print(e)
+                except IndexError:
                     break
             for i in range(20,30):
                 try:
                     self.etiket_liste[i]['text'] = "{0} saniye".format(self.puanlar_liste[i-20][2])
-                except IndexError as e:
-                    print(e)
+                except IndexError:
                     break
         else:
             msgbox.showerror("Hata","Henüz bir puan alan olmamış.")
@@ -368,10 +367,6 @@ class puanTablosu(tk.Tk):
 
 if __name__ == "__main__":
     isim_al = oyuncuIsmi()
-    isim_al.focus_force()
     isim_al.mainloop()
-    while len(isim_al.isim) <= 3:
-        msgbox.showerror("Hata","İsimdeki karakter sayısı en az 4 olmalı.")
-        raise SystemExit
     pencere = kelimeOyunu(isim_al.isim)
     pencere.mainloop()
