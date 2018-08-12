@@ -1,4 +1,4 @@
-import tkinter as tk
+﻿import tkinter as tk
 import tkinter.filedialog as fdialog
 import tkinter.messagebox as msgbox
 from random import randint, choice
@@ -61,6 +61,7 @@ class kelimeOyunu(tk.Tk):
         self.bind("<Return>", self.benjamin_fonksiyon)
         self.bind("<space>", self.harf_ver)
         self.bind("<Control-n>", self.yeni_sorular)
+        self.bind("<Control-p>", self.oyun_sonu)
         self.soru_etiket = tk.Message(self, text="Soru", font=("Helvetica", 20), width=700)
         self.sure_etiket = tk.Label(self, text=" ", font=("Helvetica", 30))
         self.kelime_etiket = tk.Label(self, text="KELİME", font=("Courier New", 40), width=14)
@@ -83,8 +84,10 @@ class kelimeOyunu(tk.Tk):
         self.dusunsure_etiket_statik.grid(row=4,column=2)
         self.dusunsure_etiket.grid(row=5,column=2)
         self.puan_etiket.grid(row=6,column=0,columnspan=3)
+        self.protocol("WM_DELETE_WINDOW", self.kapat)
         self.alfabe = ["A","B","C","Ç","D","E","F","G","Ğ","H","I","İ","J","K","L","M","N","O","Ö","P","R","S","Ş","T","U","Ü","V","Y","Z"]
         self.oyuncu_ismi = isim
+        self.oyun_devam = False
         self.durduruldu = True
         self.ara = True
         self.toplam_verilen_saniye = 240
@@ -161,6 +164,7 @@ class kelimeOyunu(tk.Tk):
         self.puan_etiket['text'] += " ({0})".format(list(self.kelime_etiket['text']).count("•") * 100)
 
     def benjamin_fonksiyon(self, *args):
+        self.oyun_devam = True
         if self.benjamin_buton['state'] == 'normal':
             if self.durduruldu:
                 self.durduruldu = False
@@ -264,6 +268,7 @@ class kelimeOyunu(tk.Tk):
         return False
 
     def yeni_sorular(self, *args):
+        self.oyun_devam = False
         calisma_dizini = dirname(realpath(__file__))
         yeni_dosya = fdialog.askopenfilename(filetypes=[("Soru Dosyaları","*.soru")], initialdir=calisma_dizini, title="Soru dosyası seç...")
         if yeni_dosya == '':
@@ -297,13 +302,22 @@ class kelimeOyunu(tk.Tk):
         self.benjamin_buton.configure(state="normal", text="Başla")
         self.geri_sayim(self.toplam_verilen_saniye)
 
-    def oyun_sonu(self):
-        if not isfile("puanlar.txt"):
-            with open("puanlar.txt","w") as f:
-                f.write("İsim,Puan,Kalan Süre,Soru Paketi\n")
-        
-        with open("puanlar.txt","a") as f:
-            f.write("{isim},{puan},{sure},{dosya}\n".format(isim=self.oyuncu_ismi, puan=self.puan, sure=int(self.kalan_sure), dosya=basename(self.son_dosya)))
+    def kapat(self):
+        if self.oyun_devam:
+            msgbox.showerror("Hata","Oyun devam ederken çıkamazsınız.")
+            pass
+        else:
+            raise SystemExit
+
+    def oyun_sonu(self, *args):
+        self.oyun_devam = False
+        if args == ():
+            if not isfile("puanlar.txt"):
+                with open("puanlar.txt","w") as f:
+                    f.write("İsim,Puan,Kalan Süre,Soru Paketi\n")
+            
+            with open("puanlar.txt","a") as f:
+                f.write("{isim},{puan},{sure},{dosya}\n".format(isim=self.oyuncu_ismi, puan=self.puan, sure=int(self.kalan_sure), dosya=basename(self.son_dosya)))
         
         puan_goster = puanTablosu()
         puan_goster.focus_force()
