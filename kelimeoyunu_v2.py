@@ -127,9 +127,9 @@ class kelimeOyunu(tk.Tk):
             self.sure_durdu("Süre Bitti")
         else:
             self.sure_etiket.configure(text="{dk}:{sn:02d}".format(dk=(int(self.kalan_sure//60)), sn=(int(self.kalan_sure%60))))
-            self.kalan_sure -= 0.1
+            self.kalan_sure -= 1
             if not self.durduruldu:
-                self.after(100, self.geri_sayim)
+                self.after(1000, self.geri_sayim)
 
     def ileri_sayim(self, bastan_basla = False):
         if self.ara:
@@ -148,9 +148,9 @@ class kelimeOyunu(tk.Tk):
             return None
         
         self.dusunsure_etiket.configure(text="{0}".format(int(self.gecen_sure)))
-        self.gecen_sure += 0.1
+        self.gecen_sure += 1
         if self.durduruldu:
-            self.after(100, self.ileri_sayim)
+            self.after(1000, self.ileri_sayim)
 
     def sure_durdu(self, neden = "Yeni Soru"):
         self.durduruldu = True
@@ -182,14 +182,18 @@ class kelimeOyunu(tk.Tk):
                 else:
                     self.sure_durdu()
         elif self.benjamin_buton['state'] == 'disabled':
-            if len(self.tahmin_giris.get()) != len(self.dogru_cevap):
-                self.tahmin_giris.delete(0, "end")
-                return None
             if self.tahmin_giris.get().replace("i","İ").upper() == self.dogru_cevap:
                 self.tahmin_giris.delete(0, "end")
                 self.bildi()
             else:
                 self.tahmin_giris.delete(0, "end")
+                for _ in range(2):
+                    self.tahmin_giris.configure(background="red")
+                    self.tahmin_giris.update_idletasks()
+                    self.after(100)
+                    self.tahmin_giris.configure(background="white")
+                    self.tahmin_giris.update_idletasks()
+                    self.after(100)
                 return None
 
     def harf_ver(self, *args):
@@ -218,10 +222,12 @@ class kelimeOyunu(tk.Tk):
                 elif self.kalan_sure <= 0:
                     self.benjamin_buton.configure(text="Süre Bitti", state="disabled")
                     self.harfaliyim_buton.configure(state="disabled")
+                    self.oyun_devam = False
                     self.oyun_sonu()
                 elif self.soru_sayisi == 14:
                     self.benjamin_buton.configure(text="Soru Bitti", state="disabled")
                     self.harfaliyim_buton.configure(state="disabled")
+                    self.oyun_devam = False
                     self.oyun_sonu()
         elif self.harfaliyim_buton['state'] == 'disabled':
             return None
@@ -255,6 +261,7 @@ class kelimeOyunu(tk.Tk):
         self.dusunsure_etiket.configure(text=" ")
         self.dusunsure_etiket_statik.configure(text=" ")
         if self.benjamin_buton['state'] == 'disabled':
+            self.oyun_devam = False
             self.oyun_sonu()
 
     def bilemedi(self):
@@ -268,49 +275,49 @@ class kelimeOyunu(tk.Tk):
         return False
 
     def yeni_sorular(self, *args):
-        self.oyun_devam = False
-        calisma_dizini = dirname(realpath(__file__))
-        yeni_dosya = fdialog.askopenfilename(filetypes=[("Soru Dosyaları","*.soru")], initialdir=calisma_dizini, title="Soru dosyası seç...")
-        if yeni_dosya == '':
-            if self.son_dosya == '':
-                msgbox.showerror("Hata","Soru dosyası yüklemesi sırasında bir hata oluştu.")
+        if not self.oyun_devam:
+            calisma_dizini = dirname(realpath(__file__))
+            yeni_dosya = fdialog.askopenfilename(filetypes=[("Soru Dosyaları","*.soru")], initialdir=calisma_dizini, title="Soru dosyası seç...")
+            if yeni_dosya == '':
+                if self.son_dosya == '':
+                    msgbox.showerror("Hata","Soru dosyası yüklemesi sırasında bir hata oluştu.")
+                    raise SystemExit
+                return None
+            self.son_dosya = yeni_dosya
+            with open(self.son_dosya) as f:
+                self.sorular = f.readlines()
+            if self.dosya_dogrula():
+                msgbox.showerror("Hata","Yanlış formatta bir soru dosyası seçildi.")
                 raise SystemExit
-            return None
-        self.son_dosya = yeni_dosya
-        with open(self.son_dosya) as f:
-            self.sorular = f.readlines()
-        if self.dosya_dogrula():
-            msgbox.showerror("Hata","Yanlış formatta bir soru dosyası seçildi.")
-            raise SystemExit
-        with open("veri", "w") as f:
-            f.write(self.son_dosya)
-        self.durduruldu = True
-        self.ara = True
-        self.gecen_sure = 0
-        self.soru_sayisi = 0
-        self.puan = 0
-        self.dogru_cevap = " "
-        self.alinan_harfler = []
-        self.soru_etiket.configure(text="Soru")
-        self.kelime_etiket.configure(text="KELİME")
-        self.dusunsure_etiket.configure(text=" ")
-        self.dusunsure_etiket_statik.configure(text=" ")
-        self.puan_etiket.configure(text="Puan: 0")
-        self.harfaliyim_buton.configure(state="disabled")
-        self.tahmin_giris.configure(state="disabled")
-        self.tahmin_buton.configure(state="disabled")
-        self.benjamin_buton.configure(state="normal", text="Başla")
-        self.geri_sayim(self.toplam_verilen_saniye)
+            with open("veri", "w") as f:
+                f.write(self.son_dosya)
+            self.durduruldu = True
+            self.ara = True
+            self.gecen_sure = 0
+            self.soru_sayisi = 0
+            self.puan = 0
+            self.dogru_cevap = " "
+            self.alinan_harfler = []
+            self.soru_etiket.configure(text="Soru")
+            self.kelime_etiket.configure(text="KELİME")
+            self.dusunsure_etiket.configure(text=" ")
+            self.dusunsure_etiket_statik.configure(text=" ")
+            self.puan_etiket.configure(text="Puan: 0")
+            self.harfaliyim_buton.configure(state="disabled")
+            self.tahmin_giris.configure(state="disabled")
+            self.tahmin_buton.configure(state="disabled")
+            self.benjamin_buton.configure(state="normal", text="Başla")
+            self.geri_sayim(self.toplam_verilen_saniye)
+        else:
+            msgbox.showerror("Hata","Oyun devam ederken yeni soru paketi açamazsınız.")
 
     def kapat(self):
         if self.oyun_devam:
             msgbox.showerror("Hata","Oyun devam ederken çıkamazsınız.")
-            pass
         else:
             raise SystemExit
 
     def oyun_sonu(self, *args):
-        self.oyun_devam = False
         if args == ():
             if not isfile("puanlar.txt"):
                 with open("puanlar.txt","w") as f:
