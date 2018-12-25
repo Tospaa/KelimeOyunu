@@ -3,6 +3,7 @@ import tkinter.filedialog as fdialog
 import tkinter.messagebox as msgbox
 from random import randint, choice
 from os.path import isfile, dirname, realpath, basename
+from threading import Thread
 
 
 class oyuncuIsmi(tk.Tk):
@@ -59,7 +60,7 @@ class kelimeOyunu(tk.Tk):
         self.resizable(False, False)
         self.title("Kelime Oyunu")
         self.bind("<Return>", self.benjamin_fonksiyon)
-        self.bind("<space>", self.harf_ver)
+        self.bind("<space>", lambda event: Thread(target=self.harf_ver).start())
         self.bind("<Control-n>", self.yeni_sorular)
         self.bind("<Control-p>", self.oyun_sonu)
         self.soru_etiket = tk.Message(self, text="Soru", font=("Helvetica", 20), width=700)
@@ -70,7 +71,7 @@ class kelimeOyunu(tk.Tk):
         self.sure_etiket_statik = tk.Label(self, text="Kalan Süre", font=("Helvetica", 15))
         self.dusunsure_etiket_statik = tk.Label(self, text=" ", font=("Helvetica", 15))
         self.benjamin_buton = tk.Button(self, text="Başla", command=self.benjamin_fonksiyon, font=("Helvetica", 30), width=13)
-        self.harfaliyim_buton = tk.Button(self, text="Harf Alayım", command=self.harf_ver, state="disabled", font=("Helvetica", 30))
+        self.harfaliyim_buton = tk.Button(self, text="Harf Alayım", command=lambda: Thread(target=self.harf_ver).start(), state="disabled", font=("Helvetica", 30))
         self.tahmin_giris = tk.Entry(self, state="disabled", font=("Helvetica", 30))
         self.tahmin_buton = tk.Button(self, text="Cevap Ver", command=self.benjamin_fonksiyon, state="disabled", bg="green", fg="white", font=("Helvetica", 30))
         self.soru_etiket.grid(row=0,column=0,columnspan=3, sticky="we")
@@ -89,6 +90,8 @@ class kelimeOyunu(tk.Tk):
         self.oyuncu_ismi = isim
         self.oyun_devam = False
         self.durduruldu = True
+        self.harf_ver_kilitli = False
+        self.gereksiz_kilitli = False
         self.ara = True
         self.toplam_verilen_saniye = 240
         self.kalan_sure = 0
@@ -127,9 +130,9 @@ class kelimeOyunu(tk.Tk):
             self.sure_durdu("Süre Bitti")
         else:
             self.sure_etiket.configure(text="{dk}:{sn:02d}".format(dk=(int(self.kalan_sure//60)), sn=(int(self.kalan_sure%60))))
-            self.kalan_sure -= 1
+            self.kalan_sure -= 0.1
             if not self.durduruldu:
-                self.after(1000, self.geri_sayim)
+                self.after(100, self.geri_sayim)
 
     def ileri_sayim(self, bastan_basla = False):
         if self.ara:
@@ -148,9 +151,9 @@ class kelimeOyunu(tk.Tk):
             return None
         
         self.dusunsure_etiket.configure(text="{0}".format(int(self.gecen_sure)))
-        self.gecen_sure += 1
+        self.gecen_sure += 0.1
         if self.durduruldu:
-            self.after(1000, self.ileri_sayim)
+            self.after(100, self.ileri_sayim)
 
     def sure_durdu(self, neden = "Yeni Soru"):
         self.durduruldu = True
@@ -187,50 +190,61 @@ class kelimeOyunu(tk.Tk):
                 self.bildi()
             else:
                 self.tahmin_giris.delete(0, "end")
-                for _ in range(2):
-                    self.tahmin_giris.configure(background="red")
-                    self.tahmin_giris.update_idletasks()
-                    self.after(100)
-                    self.tahmin_giris.configure(background="white")
-                    self.tahmin_giris.update_idletasks()
-                    self.after(100)
+                def gereksiz():
+                    if self.gereksiz_kilitli:
+                        return None
+                    else:
+                        self.gereksiz_kilitli = True
+                        for _ in range(2):
+                            self.tahmin_giris.configure(background="red")
+                            self.tahmin_giris.update_idletasks()
+                            self.after(100)
+                            self.tahmin_giris.configure(background="white")
+                            self.tahmin_giris.update_idletasks()
+                            self.after(100)
+                        self.gereksiz_kilitli = False
+                Thread(target=gereksiz).start()
                 return None
 
     def harf_ver(self, *args):
-        if self.harfaliyim_buton['state'] == 'normal':
-            alinan_harf = randint(0, len(self.dogru_cevap)-1)
-            while alinan_harf in self.alinan_harfler:
+        if self.harf_ver_kilitli:
+            return None
+        else:
+            if self.harfaliyim_buton['state'] == 'normal':
+                self.harf_ver_kilitli = True
                 alinan_harf = randint(0, len(self.dogru_cevap)-1)
-            self.alinan_harfler.append(alinan_harf)
-            for _ in range(10):
+                while alinan_harf in self.alinan_harfler:
+                    alinan_harf = randint(0, len(self.dogru_cevap)-1)
+                self.alinan_harfler.append(alinan_harf)
+                for _ in range(10):
+                    hafiza = list(self.kelime_etiket['text'])
+                    hafiza[alinan_harf] = choice(self.alfabe)
+                    hafiza = ''.join(hafiza)
+                    self.kelime_etiket.configure(text=hafiza)
+                    self.kelime_etiket.update_idletasks()
+                    self.after(100)
                 hafiza = list(self.kelime_etiket['text'])
-                hafiza[alinan_harf] = choice(self.alfabe)
+                hafiza[alinan_harf] = self.dogru_cevap[alinan_harf]
                 hafiza = ''.join(hafiza)
                 self.kelime_etiket.configure(text=hafiza)
-                self.kelime_etiket.update_idletasks()
-                self.after(100)
-            hafiza = list(self.kelime_etiket['text'])
-            hafiza[alinan_harf] = self.dogru_cevap[alinan_harf]
-            hafiza = ''.join(hafiza)
-            self.kelime_etiket.configure(text=hafiza)
-            self.kalan_sure -= 0.75
-            if hafiza == self.dogru_cevap:
-                self.durduruldu = True
-                if self.kalan_sure > 0 and self.soru_sayisi != 14:
-                    self.benjamin_buton.configure(text="Yeni Soru", state="normal")
-                    self.harfaliyim_buton.configure(state="disabled")
-                elif self.kalan_sure <= 0:
-                    self.benjamin_buton.configure(text="Süre Bitti", state="disabled")
-                    self.harfaliyim_buton.configure(state="disabled")
-                    self.oyun_devam = False
-                    self.oyun_sonu()
-                elif self.soru_sayisi == 14:
-                    self.benjamin_buton.configure(text="Soru Bitti", state="disabled")
-                    self.harfaliyim_buton.configure(state="disabled")
-                    self.oyun_devam = False
-                    self.oyun_sonu()
-        elif self.harfaliyim_buton['state'] == 'disabled':
-            return None
+                if hafiza == self.dogru_cevap:
+                    self.durduruldu = True
+                    if self.kalan_sure > 0 and self.soru_sayisi != 14:
+                        self.benjamin_buton.configure(text="Yeni Soru", state="normal")
+                        self.harfaliyim_buton.configure(state="disabled")
+                    elif self.kalan_sure <= 0:
+                        self.benjamin_buton.configure(text="Süre Bitti", state="disabled")
+                        self.harfaliyim_buton.configure(state="disabled")
+                        self.oyun_devam = False
+                        self.oyun_sonu()
+                    elif self.soru_sayisi == 14:
+                        self.benjamin_buton.configure(text="Soru Bitti", state="disabled")
+                        self.harfaliyim_buton.configure(state="disabled")
+                        self.oyun_devam = False
+                        self.oyun_sonu()
+                self.harf_ver_kilitli = False
+            elif self.harfaliyim_buton['state'] == 'disabled':
+                return None
 
     def bildi(self, durum = True):
         if self.kalan_sure > 0 and self.soru_sayisi != 14:
