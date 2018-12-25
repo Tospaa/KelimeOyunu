@@ -268,11 +268,7 @@ class kelimeOyunu(tk.Tk):
         self.bildi(False)
     
     def dosya_dogrula(self):
-        if len(self.sorular) != 29:
-            return True
-        if self.sorular[-1] != "SORU DOSYASI":
-            return True
-        return False
+        return len(self.sorular) != 29 or self.sorular[-1] != "SORU DOSYASI"
 
     def yeni_sorular(self, *args):
         if not self.oyun_devam:
