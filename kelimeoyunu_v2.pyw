@@ -90,9 +90,9 @@ class kelimeOyunu(tk.Tk):
         self.oyuncu_ismi = isim
         self.oyun_devam = False
         self.durduruldu = True
-        self.harf_ver_kilitli = False
+        self.harf_ver_ve_benjamin_fonksiyon_kilitli = False
         self.gereksiz_kilitli = False
-        self.OZEL_DURUM = False
+        self.ozel_durum = False
         self.ara = True
         self.toplam_verilen_saniye = 240
         self.kalan_sure = 0
@@ -126,7 +126,7 @@ class kelimeOyunu(tk.Tk):
         if yerel_kalan_sure is not None:
             self.kalan_sure = yerel_kalan_sure
         
-        if self.OZEL_DURUM:
+        if self.ozel_durum:
             '''
             oyun_sonu metodunu harf_ver metodundan çağıramıyorum çünkise Thread mevzu çıkarıyo.
             Ancak böyle bi çözüm bulabildim.
@@ -134,7 +134,7 @@ class kelimeOyunu(tk.Tk):
             "Her zaman bir workaround vardır."
                                      ~Tospaa, circa 2017.
             '''
-            self.OZEL_DURUM = False
+            self.ozel_durum = False
             self.oyun_sonu()
         
         if self.kalan_sure <= 0:
@@ -179,7 +179,7 @@ class kelimeOyunu(tk.Tk):
         self.puan_etiket['text'] += " ({0})".format(list(self.kelime_etiket['text']).count("•") * 100)
 
     def benjamin_fonksiyon(self, *args):
-        if self.harf_ver_kilitli:
+        if self.harf_ver_ve_benjamin_fonksiyon_kilitli:
             return None
         else:
             self.oyun_devam = True
@@ -221,11 +221,11 @@ class kelimeOyunu(tk.Tk):
                     Thread(target=gereksiz).start()
 
     def harf_ver(self, *args):
-        if self.harf_ver_kilitli:
+        if self.harf_ver_ve_benjamin_fonksiyon_kilitli:
             return None
         else:
             if self.harfaliyim_buton['state'] == 'normal':
-                self.harf_ver_kilitli = True
+                self.harf_ver_ve_benjamin_fonksiyon_kilitli = True
                 gerekList = []
                 for indx, harf in enumerate(self.kelime_etiket['text']):
                     if harf == "•":
@@ -252,8 +252,8 @@ class kelimeOyunu(tk.Tk):
                         self.benjamin_buton.configure(text="Soru Bitti", state="disabled")
                         self.harfaliyim_buton.configure(state="disabled")
                         self.oyun_devam = False
-                        self.OZEL_DURUM = True
-                self.harf_ver_kilitli = False
+                        self.ozel_durum = True
+                self.harf_ver_ve_benjamin_fonksiyon_kilitli = False
             elif self.harfaliyim_buton['state'] == 'disabled':
                 return None
 
