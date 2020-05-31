@@ -104,15 +104,15 @@ class kelimeOyunu(tk.Tk):
         self.geri_sayim(self.toplam_verilen_saniye)
         self.focus_force()
         if not isfile("veri"):
-            with open("veri","w") as f:
+            with open("veri","w",encoding="utf-8") as f:
                 pass
             self.son_dosya = ''
             self.yeni_sorular()
         else:
-            with open("veri") as f:
+            with open("veri",encoding="utf-8") as f:
                 self.son_dosya = f.read()
             try:
-                with open(self.son_dosya) as f:
+                with open(self.son_dosya,encoding="utf-8") as f:
                     self.sorular = f.readlines()
                     if self.dosya_dogrula():
                         msgbox.showerror("Hata","Yanlış formatta bir soru dosyası seçilmiş.")
@@ -304,12 +304,12 @@ class kelimeOyunu(tk.Tk):
                     raise SystemExit
                 return None
             self.son_dosya = yeni_dosya
-            with open(self.son_dosya) as f:
+            with open(self.son_dosya,encoding="utf-8") as f:
                 self.sorular = f.readlines()
             if self.dosya_dogrula():
                 msgbox.showerror("Hata","Yanlış formatta bir soru dosyası seçildi.")
                 raise SystemExit
-            with open("veri", "w") as f:
+            with open("veri", "w", encoding="utf-8") as f:
                 f.write(self.son_dosya)
             self.durduruldu = True
             self.ara = True
@@ -340,10 +340,10 @@ class kelimeOyunu(tk.Tk):
     def oyun_sonu(self, *args):
         if args == ():
             if not isfile("puanlar.txt"):
-                with open("puanlar.txt","w") as f:
+                with open("puanlar.txt","w",encoding="utf-8") as f:
                     f.write("İsim,Puan,Kalan Süre,Soru Paketi\n")
             
-            with open("puanlar.txt","a") as f:
+            with open("puanlar.txt","a",encoding="utf-8") as f:
                 f.write("{isim},{puan},{sure},{dosya}\n".format(isim=self.oyuncu_ismi, puan=self.puan, sure=int(self.kalan_sure), dosya=basename(self.son_dosya)))
         
         puan_goster = puanTablosu()
@@ -380,7 +380,7 @@ class puanTablosu(tk.Tk):
     
     def puan_yukle(self):
         if isfile("puanlar.txt"):
-            with open("puanlar.txt") as f:
+            with open("puanlar.txt",encoding="utf-8") as f:
                 self.puanlar_liste = f.readlines()
             del self.puanlar_liste[0]
             for i in range(len(self.puanlar_liste)):
